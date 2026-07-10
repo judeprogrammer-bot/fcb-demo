@@ -4,10 +4,11 @@
   "public_key": "pk_pfaGaklwUg8tr1wAF5C5e",
   "projectTitle": "FCB AWS Cloud Platform Migration",
   "description": "Terraform IaC for FCB Platform 1.0 to 2.0 migration demo",
-  "folders": ["app-teams", "platform-modules", "sentinel-policies", ".gitlab"],
+  "folders": ["docs"],
   "rules": [
     "Reference specific file paths and line numbers when discussing Sentinel or Wiz violations",
     "Platform 2.0 modules live in platform-modules/",
-    "Legacy app team code lives in app-teams/"
+    "Legacy app team code lives in app-teams/",
+    "Inline IAM violations are documented in docs/inline-iam-audit.md"
   ]
 }
