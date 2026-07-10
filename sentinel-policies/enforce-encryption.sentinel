@@ -1,0 +1,61 @@
+# Sentinel Policy: enforce-encryption-at-rest
+# Type: HARD MANDATORY (blocks apply on failure)
+# Description: All storage resources must have encryption enabled
+# CCF Control: CCF-ENC-001
+
+import "tfplan/v2" as tfplan
+
+# S3 buckets must have server-side encryption
+s3_buckets = filter tfplan.resource_changes as _, rc {
+  rc.type is "aws_s3_bucket_server_side_encryption_configuration" and
+  rc.mode is "managed" and
+  (rc.change.actions contains "create" or rc.change.actions contains "update")
+}
+
+# SQS queues must have KMS encryption
+sqs_queues = filter tfplan.resource_changes as _, rc {
+  rc.type is "aws_sqs_queue" and
+  rc.mode is "managed" and
+  (rc.change.actions contains "create" or rc.change.actions contains "update")
+}
+
+# Validate SQS has KMS
+sqs_encrypted = rule {
+  all sqs_queues as _, queue {
+    queue.change.after.kms_master_key_id is not null and
+    queue.change.after.kms_master_key_id is not ""
+  }
+}
+
+# SNS topics must have KMS encryption
+sns_topics = filter tfplan.resource_changes as _, rc {
+  rc.type is "aws_sns_topic" and
+  rc.mode is "managed" and
+  (rc.change.actions contains "create" or rc.change.actions contains "update")
+}
+
+sns_encrypted = rule {
+  all sns_topics as _, topic {
+    topic.change.after.kms_master_key_id is not null and
+    topic.change.after.kms_master_key_id is not ""
+  }
+}
+
+# CloudWatch Log Groups must have KMS encryption
+log_groups = filter tfplan.resource_changes as _, rc {
+  rc.type is "aws_cloudwatch_log_group" and
+  rc.mode is "managed" and
+  (rc.change.actions contains "create" or rc.change.actions contains "update")
+}
+
+logs_encrypted = rule {
+  all log_groups as _, lg {
+    lg.change.after.kms_key_id is not null and
+    lg.change.after.kms_key_id is not ""
+  }
+}
+
+# HARD MANDATORY - blocks terraform apply
+main = rule {
+  sqs_encrypted and sns_encrypted and logs_encrypted
+}

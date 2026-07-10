@@ -1,0 +1,11 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "FCB AWS Cloud Platform Migration",
+  "description": "Terraform IaC for FCB Platform 1.0 to 2.0 migration demo",
+  "folders": ["app-teams", "platform-modules", "sentinel-policies", ".gitlab"],
+  "rules": [
+    "Reference specific file paths and line numbers when discussing Sentinel or Wiz violations",
+    "Platform 2.0 modules live in platform-modules/",
+    "Legacy app team code lives in app-teams/"
+  ]
+}

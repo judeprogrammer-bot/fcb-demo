@@ -1,0 +1,78 @@
+# =============================================================================
+# FCB Platform CI/CD Pipeline Template
+# All app teams include this in their .gitlab-ci.yml
+# Workflow: Plan → Sentinel → Wiz → Review → Apply
+# =============================================================================
+
+stages:
+  - validate
+  - plan
+  - security
+  - apply
+
+variables:
+  TF_VERSION: "1.5.7"
+  TFC_ORG: "fcb-cloud"
+
+# --- VALIDATE ---
+terraform-validate:
+  stage: validate
+  image: hashicorp/terraform:${TF_VERSION}
+  script:
+    - terraform init -backend=false
+    - terraform validate
+    - terraform fmt -check -recursive
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# --- PLAN (Speculative in HCP Terraform) ---
+terraform-plan:
+  stage: plan
+  image: hashicorp/terraform:${TF_VERSION}
+  script:
+    - echo "Triggering speculative plan in HCP Terraform..."
+    - echo "Workspace: ${TFC_WORKSPACE}"
+    - echo "VCS-driven plan initiated via GitLab integration"
+  artifacts:
+    reports:
+      terraform: plan.json
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# --- SENTINEL POLICY CHECK ---
+sentinel-check:
+  stage: security
+  image: hashicorp/sentinel:latest
+  script:
+    - echo "Running Sentinel policy checks..."
+    - echo "Hard-fail policies: enforce-encryption, enforce-tagging"
+    - echo "Soft-fail policies: restrict-iam-inline, restrict-public-access"
+    - sentinel apply -config=sentinel-policies/
+  allow_failure: false
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# --- WIZ IO CICD SCAN ---
+wiz-security-scan:
+  stage: security
+  image: wizcli:latest
+  script:
+    - echo "Running Wiz IaC scan..."
+    - echo "Rules: High/Critical = FAIL, Medium <= 5 = PASS"
+    - wiz-cli iac scan --path . --policy "FCB-IaC-Policy"
+  allow_failure: false
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# --- APPLY (only on merge to develop/main) ---
+terraform-apply:
+  stage: apply
+  image: hashicorp/terraform:${TF_VERSION}
+  script:
+    - echo "Applying to non-production landing zone..."
+    - echo "HCP Terraform workspace: ${TFC_WORKSPACE}"
+  environment:
+    name: non-production
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+      when: manual

@@ -1,0 +1,32 @@
+# Sentinel Policy: restrict-iam-inline-policies
+# Type: SOFT MANDATORY (requires Cloud Security manual approval)
+# Description: Inline IAM policies require human review
+# CCF Control: CCF-IAM-003
+
+import "tfplan/v2" as tfplan
+
+# Find all IAM roles being created or modified
+iam_roles = filter tfplan.resource_changes as _, rc {
+  rc.type is "aws_iam_role" and
+  rc.mode is "managed" and
+  (rc.change.actions contains "create" or rc.change.actions contains "update")
+}
+
+# Check if any role has inline_policy blocks
+no_inline_policies = rule {
+  all iam_roles as _, role {
+    role.change.after.inline_policy is null or
+    length(role.change.after.inline_policy) is 0
+  }
+}
+
+# SOFT MANDATORY - requires Cloud Security team approval if violated
+# Teams using platform-modules/iam-role are pre-approved and bypass this check
+main = rule {
+  no_inline_policies
+}
+
+# Advisory message shown to developers
+print("POLICY: IAM inline policies detected. This requires manual review by Cloud Security.")
+print("RECOMMENDATION: Use the pre-approved IAM module from platform-modules/iam-role")
+print("which automatically passes this policy check.")
