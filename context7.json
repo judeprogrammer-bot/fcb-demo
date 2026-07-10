@@ -1,5 +1,7 @@
 {
   "$schema": "https://context7.com/schema/context7.json",
+  "url": "https://context7.com/judeprogrammer-bot/fcb-demo",
+  "public_key": "pk_pfaGaklwUg8tr1wAF5C5e",
   "projectTitle": "FCB AWS Cloud Platform Migration",
   "description": "Terraform IaC for FCB Platform 1.0 to 2.0 migration demo",
   "folders": ["app-teams", "platform-modules", "sentinel-policies", ".gitlab"],
