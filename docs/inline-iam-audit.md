@@ -70,4 +70,8 @@ resource "aws_iam_role" "wealth_task" {
 
 ## Remediation
 
-Replace inline policies with `platform-modules/iam-role`, which uses managed policies and auto-passes Sentinel.
+Replace inline policies with [platform-modules/iam-role](platform-modules-iam-role.md), which uses managed policies and auto-passes Sentinel.
+
+## Per-Team Docs
+
+- [Payments](app-teams-payments.md) | [Fraud Detection](app-teams-fraud-detection.md) | [Lending](app-teams-lending.md) | [Wealth Management](app-teams-wealth-management.md) | [Onboarding (no violations)](app-teams-onboarding.md)
